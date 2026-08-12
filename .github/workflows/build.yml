@@ -1,0 +1,33 @@
+name: Build Dual Cam APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+      - uses: android-actions/setup-android@v3
+      - name: Setup Gradle wrapper
+        run: |
+          if [ ! -f gradlew ]; then
+            curl -sL -o gradle.zip https://services.gradle.org/distributions/gradle-8.2-bin.zip
+            unzip -q gradle.zip
+            ./gradle-8.2/bin/gradle wrapper --gradle-version 8.2
+          fi
+          chmod +x gradlew
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: dual-cam-apk
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 14
