@@ -6,11 +6,10 @@
     android:background="#000000">
 
     <TextureView
-        android:id="@+id/backPreview"
+        android:id="@+id/mainPreview"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- Grid overlay -->
     <View
         android:id="@+id/gridOverlay"
         android:layout_width="match_parent"
@@ -18,47 +17,42 @@
         android:background="@drawable/grid_lines"
         android:visibility="gone" />
 
-    <!-- Front PIP -->
+    <!-- PIP secondary camera -->
     <FrameLayout
         android:id="@+id/pipContainer"
         android:layout_width="100dp"
         android:layout_height="133dp"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="12dp"
-        android:layout_marginBottom="110dp"
+        android:layout_marginBottom="120dp"
         android:background="#55FFFFFF"
-        android:elevation="6dp"
+        android:elevation="8dp"
         android:visibility="gone">
 
         <TextureView
-            android:id="@+id/frontPreview"
+            android:id="@+id/pipPreview"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="top|start"
-            android:layout_margin="3dp"
-            android:background="#99000000"
-            android:paddingLeft="4dp"
-            android:paddingRight="4dp"
-            android:paddingTop="1dp"
-            android:paddingBottom="1dp"
-            android:text="FRONT"
-            android:textColor="#FFF"
-            android:textSize="9sp" />
     </FrameLayout>
 
-    <!-- Top bar: flash + dual + grid -->
+    <!-- Top bar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="top"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:padding="10dp"
-        android:background="#66000000">
+        android:padding="8dp"
+        android:background="#88000000">
+
+        <TextView
+            android:id="@+id/btnSettings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:text="Settings"
+            android:textColor="#FFF"
+            android:textSize="12sp" />
 
         <TextView
             android:id="@+id/btnFlash"
@@ -69,29 +63,23 @@
             android:textColor="#FFF"
             android:textSize="12sp" />
 
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
+        <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
 
         <TextView
             android:id="@+id/btnDual"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
             android:text="Dual OFF"
             android:textColor="#FFF"
             android:textSize="12sp"
             android:textStyle="bold"
             android:background="#33FFFFFF" />
 
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
+        <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
 
         <TextView
             android:id="@+id/btnGrid"
@@ -101,47 +89,68 @@
             android:text="Grid"
             android:textColor="#AAFFFFFF"
             android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/btnSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:text="Switch"
+            android:textColor="#FFF"
+            android:textSize="12sp" />
     </LinearLayout>
 
-    <!-- Status -->
     <TextView
         android:id="@+id/statusText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="top"
-        android:layout_marginTop="48dp"
-        android:padding="4dp"
+        android:layout_marginTop="44dp"
         android:gravity="center"
+        android:padding="4dp"
         android:text=""
         android:textColor="#CCFFFFFF"
         android:textSize="11sp" />
 
-    <!-- Bottom controls -->
+    <!-- Zoom slider -->
+    <SeekBar
+        android:id="@+id/zoomBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="130dp"
+        android:layout_marginLeft="24dp"
+        android:layout_marginRight="24dp"
+        android:max="100"
+        android:progress="0"
+        android:progressTint="#FFFFFF"
+        android:thumbTint="#FFFFFF" />
+
+    <!-- Bottom bar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:orientation="vertical"
         android:background="#99000000"
-        android:paddingTop="8dp"
-        android:paddingBottom="14dp">
+        android:paddingTop="6dp"
+        android:paddingBottom="12dp">
 
-        <!-- PHOTO | VIDEO -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:orientation="horizontal"
-            android:paddingBottom="10dp">
+            android:paddingBottom="8dp">
 
             <TextView
                 android:id="@+id/btnModePhoto"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingLeft="18dp"
-                android:paddingRight="18dp"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
                 android:text="PHOTO"
                 android:textColor="#FFFFFF"
                 android:textSize="13sp"
@@ -152,26 +161,37 @@
                 android:id="@+id/btnModeVideo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="14dp"
-                android:paddingLeft="18dp"
-                android:paddingRight="18dp"
-                android:paddingTop="6dp"
-                android:paddingBottom="6dp"
+                android:layout_marginStart="12dp"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
                 android:text="VIDEO"
                 android:textColor="#AAFFFFFF"
                 android:textSize="13sp" />
         </LinearLayout>
 
-        <!-- Shutter -->
-        <FrameLayout
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="64dp">
+
+            <!-- Last capture thumb -->
+            <ImageView
+                android:id="@+id/thumbPreview"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="20dp"
+                android:scaleType="centerCrop"
+                android:background="#33FFFFFF"
+                android:contentDescription="Gallery" />
 
             <FrameLayout
                 android:id="@+id/btnCapture"
                 android:layout_width="58dp"
                 android:layout_height="58dp"
-                android:layout_gravity="center"
+                android:layout_centerInParent="true"
                 android:clickable="true"
                 android:focusable="true">
 
@@ -189,6 +209,52 @@
                     android:layout_gravity="center"
                     android:background="@drawable/shutter_inner_photo" />
             </FrameLayout>
-        </FrameLayout>
+        </RelativeLayout>
     </LinearLayout>
+
+    <!-- Fullscreen preview of last photo -->
+    <FrameLayout
+        android:id="@+id/photoViewer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#EE000000"
+        android:visibility="gone"
+        android:clickable="true">
+
+        <ImageView
+            android:id="@+id/photoFull"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitCenter" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:gravity="center"
+            android:padding="16dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/btnDeletePhoto"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:text="Delete"
+                android:textColor="#FF5252"
+                android:textSize="14sp"
+                android:background="#33FFFFFF" />
+
+            <TextView
+                android:id="@+id/btnClosePhoto"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:padding="12dp"
+                android:text="Close"
+                android:textColor="#FFF"
+                android:textSize="14sp"
+                android:background="#33FFFFFF" />
+        </LinearLayout>
+    </FrameLayout>
 </FrameLayout>
