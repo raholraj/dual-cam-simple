@@ -10,11 +10,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Reconstruct MainActivity
+        run: |
+          mkdir -p app/src/main/java/com/rahol/dualcam
+          if [ -d src_chunks ] && ls src_chunks/ma_*.b64 1>/dev/null 2>&1; then
+            cat src_chunks/ma_*.b64 | base64 -d > app/src/main/java/com/rahol/dualcam/MainActivity.kt
+            echo "Reconstructed:"
+            wc -l app/src/main/java/com/rahol/dualcam/MainActivity.kt
+          fi
+
       - uses: actions/setup-java@v4
         with:
           java-version: "17"
           distribution: temurin
+
       - uses: android-actions/setup-android@v3
+
       - name: Setup Gradle wrapper
         run: |
           if [ ! -f gradlew ]; then
@@ -23,8 +35,10 @@ jobs:
             ./gradle-8.2/bin/gradle wrapper --gradle-version 8.2
           fi
           chmod +x gradlew
+
       - name: Build debug APK
         run: ./gradlew assembleDebug --no-daemon --stacktrace
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
