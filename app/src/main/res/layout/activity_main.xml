@@ -17,16 +17,17 @@
         android:background="@drawable/grid_lines"
         android:visibility="gone" />
 
-    <!-- PIP secondary camera -->
+    <!-- PIP box - draggable -->
     <FrameLayout
         android:id="@+id/pipContainer"
-        android:layout_width="100dp"
-        android:layout_height="133dp"
-        android:layout_gravity="bottom|end"
+        android:layout_width="110dp"
+        android:layout_height="146dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="56dp"
         android:layout_marginEnd="12dp"
-        android:layout_marginBottom="120dp"
-        android:background="#55FFFFFF"
-        android:elevation="8dp"
+        android:background="#AAFFFFFF"
+        android:padding="2dp"
+        android:elevation="10dp"
         android:visibility="gone">
 
         <TextureView
@@ -35,69 +36,51 @@
             android:layout_height="match_parent" />
     </FrameLayout>
 
-    <!-- Top bar -->
+    <!-- TOP BAR: Flash | Dual | Settings -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:layout_gravity="top"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:padding="8dp"
-        android:background="#88000000">
-
-        <TextView
-            android:id="@+id/btnSettings"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:text="Settings"
-            android:textColor="#FFF"
-            android:textSize="12sp" />
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:background="#66000000">
 
         <TextView
             android:id="@+id/btnFlash"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:text="Flash Off"
-            android:textColor="#FFF"
-            android:textSize="12sp" />
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:text="⚡"
+            android:textSize="20sp"
+            android:textColor="#FFFFFF" />
 
         <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
 
         <TextView
             android:id="@+id/btnDual"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingLeft="10dp"
-            android:paddingRight="10dp"
-            android:paddingTop="5dp"
-            android:paddingBottom="5dp"
-            android:text="Dual OFF"
-            android:textColor="#FFF"
-            android:textSize="12sp"
+            android:layout_height="32dp"
+            android:gravity="center"
+            android:paddingLeft="14dp"
+            android:paddingRight="14dp"
+            android:text="Dual"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
             android:textStyle="bold"
             android:background="#33FFFFFF" />
 
         <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
 
         <TextView
-            android:id="@+id/btnGrid"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:text="Grid"
-            android:textColor="#AAFFFFFF"
-            android:textSize="12sp" />
-
-        <TextView
-            android:id="@+id/btnSwitch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:text="Switch"
-            android:textColor="#FFF"
-            android:textSize="12sp" />
+            android:id="@+id/btnSettings"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:text="⚙"
+            android:textSize="20sp"
+            android:textColor="#FFFFFF" />
     </LinearLayout>
 
     <TextView
@@ -105,114 +88,115 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="top"
-        android:layout_marginTop="44dp"
+        android:layout_marginTop="50dp"
         android:gravity="center"
-        android:padding="4dp"
+        android:padding="2dp"
         android:text=""
-        android:textColor="#CCFFFFFF"
+        android:textColor="#AAFFFFFF"
         android:textSize="11sp" />
 
-    <!-- Zoom slider -->
-    <SeekBar
-        android:id="@+id/zoomBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:layout_marginBottom="130dp"
-        android:layout_marginLeft="24dp"
-        android:layout_marginRight="24dp"
-        android:max="100"
-        android:progress="0"
-        android:progressTint="#FFFFFF"
-        android:thumbTint="#FFFFFF" />
-
-    <!-- Bottom bar -->
+    <!-- BOTTOM CONTROLS -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:orientation="vertical"
         android:background="#99000000"
-        android:paddingTop="6dp"
-        android:paddingBottom="12dp">
+        android:paddingTop="8dp"
+        android:paddingBottom="16dp">
 
+        <!-- Mode row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:orientation="horizontal"
-            android:paddingBottom="8dp">
+            android:paddingBottom="10dp">
 
             <TextView
                 android:id="@+id/btnModePhoto"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:paddingTop="5dp"
-                android:paddingBottom="5dp"
+                android:layout_height="28dp"
+                android:gravity="center"
+                android:paddingLeft="18dp"
+                android:paddingRight="18dp"
                 android:text="PHOTO"
                 android:textColor="#FFFFFF"
-                android:textSize="13sp"
+                android:textSize="12sp"
                 android:textStyle="bold"
-                android:background="#33FFFFFF" />
+                android:background="#44FFFFFF" />
 
             <TextView
                 android:id="@+id/btnModeVideo"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
-                android:paddingTop="5dp"
-                android:paddingBottom="5dp"
+                android:layout_height="28dp"
+                android:layout_marginStart="16dp"
+                android:gravity="center"
+                android:paddingLeft="18dp"
+                android:paddingRight="18dp"
                 android:text="VIDEO"
-                android:textColor="#AAFFFFFF"
-                android:textSize="13sp" />
+                android:textColor="#99FFFFFF"
+                android:textSize="12sp" />
         </LinearLayout>
 
+        <!-- Gallery | Capture | Switch -->
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="64dp">
+            android:layout_height="72dp"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp">
 
-            <!-- Last capture thumb -->
             <ImageView
                 android:id="@+id/thumbPreview"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_alignParentStart="true"
                 android:layout_centerVertical="true"
-                android:layout_marginStart="20dp"
                 android:scaleType="centerCrop"
                 android:background="#33FFFFFF"
                 android:contentDescription="Gallery" />
 
             <FrameLayout
                 android:id="@+id/btnCapture"
-                android:layout_width="58dp"
-                android:layout_height="58dp"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
                 android:layout_centerInParent="true"
                 android:clickable="true"
                 android:focusable="true">
 
                 <View
                     android:id="@+id/shutterOuter"
-                    android:layout_width="58dp"
-                    android:layout_height="58dp"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
                     android:layout_gravity="center"
                     android:background="@drawable/shutter_outer" />
 
                 <View
                     android:id="@+id/shutterInner"
-                    android:layout_width="46dp"
-                    android:layout_height="46dp"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
                     android:layout_gravity="center"
                     android:background="@drawable/shutter_inner_photo" />
             </FrameLayout>
+
+            <TextView
+                android:id="@+id/btnSwitch"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:gravity="center"
+                android:text="🔄"
+                android:textSize="22sp"
+                android:textColor="#FFFFFF"
+                android:background="#33FFFFFF" />
         </RelativeLayout>
     </LinearLayout>
 
-    <!-- Fullscreen preview of last photo -->
+    <!-- Hidden / unused but kept for code compatibility -->
+    <TextView android:id="@+id/btnGrid" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+    <SeekBar xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/zoomBar" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" android:max="100" />
+
     <FrameLayout
         android:id="@+id/photoViewer"
         android:layout_width="match_parent"
