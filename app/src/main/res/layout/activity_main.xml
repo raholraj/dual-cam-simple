@@ -17,7 +17,6 @@
         android:background="@drawable/grid_lines"
         android:visibility="gone" />
 
-    <!-- PIP box - draggable -->
     <FrameLayout
         android:id="@+id/pipContainer"
         android:layout_width="110dp"
@@ -36,7 +35,6 @@
             android:layout_height="match_parent" />
     </FrameLayout>
 
-    <!-- TOP BAR: Flash | Dual | Settings -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="48dp"
@@ -95,7 +93,6 @@
         android:textColor="#AAFFFFFF"
         android:textSize="11sp" />
 
-    <!-- BOTTOM CONTROLS -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -105,7 +102,6 @@
         android:paddingTop="8dp"
         android:paddingBottom="16dp">
 
-        <!-- Mode row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -139,7 +135,6 @@
                 android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- Gallery | Capture | Switch -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="72dp"
@@ -193,9 +188,8 @@
         </RelativeLayout>
     </LinearLayout>
 
-    <!-- Hidden / unused but kept for code compatibility -->
     <TextView android:id="@+id/btnGrid" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-    <SeekBar xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/zoomBar" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" android:max="100" />
+    <SeekBar android:id="@+id/zoomBar" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" android:max="100" />
 
     <FrameLayout
         android:id="@+id/photoViewer"
