@@ -14,8 +14,11 @@ import android.view.Surface
 import android.view.TextureView
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -30,8 +33,8 @@ class MainActivity : AppCompatActivity() {
         private val PERMS = arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
     }
 
-    private lateinit var backPreview: TextureView
-    private lateinit var frontPreview: TextureView
+    private lateinit var mainPreview: TextureView
+    private lateinit var pipPreview: TextureView
     private lateinit var pip: FrameLayout
     private lateinit var status: TextView
     private lateinit var btnModePhoto: TextView
@@ -42,13 +45,21 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnDual: TextView
     private lateinit var btnFlash: TextView
     private lateinit var btnGrid: TextView
+    private lateinit var btnSwitch: TextView
+    private lateinit var btnSettings: TextView
     private lateinit var gridOverlay: View
+    private lateinit var zoomBar: SeekBar
+    private lateinit var thumbPreview: ImageView
+    private lateinit var photoViewer: FrameLayout
+    private lateinit var photoFull: ImageView
+    private lateinit var btnDeletePhoto: TextView
+    private lateinit var btnClosePhoto: TextView
 
     private var mgr: CameraManager? = null
-    private var backDev: CameraDevice? = null
-    private var frontDev: CameraDevice? = null
-    private var backSess: CameraCaptureSession? = null
-    private var frontSess: CameraCaptureSession? = null
+    private var mainDev: CameraDevice? = null
+    private var pipDev: CameraDevice? = null
+    private var mainSess: CameraCaptureSession? = null
+    private var pipSess: CameraCaptureSession? = null
     private var backId: String? = null
     private var frontId: String? = null
     private var bgThread: HandlerThread? = null
@@ -62,15 +73,16 @@ class MainActivity : AppCompatActivity() {
     private var isRecording = false
     private var dualOn = false
     private var gridOn = false
-    /** 0=off 1=on 2=auto */
+    private var mainIsBack = true
     private var flashMode = 0
+    private var zoomLevel = 0f
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        backPreview = findViewById(R.id.backPreview)
-        frontPreview = findViewById(R.id.frontPreview)
+        mainPreview = findViewById(R.id.mainPreview)
+        pipPreview = findViewById(R.id.pipPreview)
         pip = findViewById(R.id.pipContainer)
         status = findViewById(R.id.statusText)
         btnModePhoto = findViewById(R.id.btnModePhoto)
@@ -81,7 +93,15 @@ class MainActivity : AppCompatActivity() {
         btnDual = findViewById(R.id.btnDual)
         btnFlash = findViewById(R.id.btnFlash)
         btnGrid = findViewById(R.id.btnGrid)
+        btnSwitch = findViewById(R.id.btnSwitch)
+        btnSettings = findViewById(R.id.btnSettings)
         gridOverlay = findViewById(R.id.gridOverlay)
+        zoomBar = findViewById(R.id.zoomBar)
+        thumbPreview = findViewById(R.id.thumbPreview)
+        photoViewer = findViewById(R.id.photoViewer)
+        photoFull = findViewById(R.id.photoFull)
+        btnDeletePhoto = findViewById(R.id.btnDeletePhoto)
+        btnClosePhoto = findViewById(R.id.btnClosePhoto)
 
         mgr = getSystemService(CAMERA_SERVICE) as CameraManager
 
@@ -94,6 +114,26 @@ class MainActivity : AppCompatActivity() {
         btnDual.setOnClickListener { toggleDual() }
         btnFlash.setOnClickListener { cycleFlash() }
         btnGrid.setOnClickListener { toggleGrid() }
+        btnSwitch.setOnClickListener { switchCameras() }
+        btnSettings.setOnClickListener { showSettings() }
+        btnClosePhoto.setOnClickListener { photoViewer.visibility = View.GONE }
+        btnDeletePhoto.setOnClickListener {
+            Toast.makeText(this, "Deleted (preview)", Toast.LENGTH_SHORT).show()
+            photoViewer.visibility = View.GONE
+            thumbPreview.setImageDrawable(null)
+        }
+        thumbPreview.setOnClickListener {
+            if (thumbPreview.drawable != null) photoViewer.visibility = View.VISIBLE
+        }
+
+        zoomBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: SeekBar?, progress: Int, fromUser: Boolean) {
+                zoomLevel = progress / 100f
+                applyZoom()
+            }
+            override fun onStartTrackingTouch(sb: SeekBar?) {}
+            override fun onStopTrackingTouch(sb: SeekBar?) {}
+        })
 
         pip.setOnTouchListener { v, e ->
             when (e.action) {
@@ -109,7 +149,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (PERMS.all { ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED }) {
-            startBg(); setupBackOnly()
+            startBg(); setupMain()
         } else {
             ActivityCompat.requestPermissions(this, PERMS, REQ)
         }
@@ -146,16 +186,33 @@ class MainActivity : AppCompatActivity() {
         if (dualOn) {
             btnDual.text = "Dual ON"
             btnDual.setBackgroundColor(0x66E53935)
+            pip.alpha = 0f
             pip.visibility = View.VISIBLE
-            openFront()
-            status.text = "Opening front camera…"
+            pip.animate().alpha(1f).setDuration(300).start()
+            openPip()
+            status.text = "Opening second camera…"
         } else {
             btnDual.text = "Dual OFF"
             btnDual.setBackgroundColor(0x33FFFFFF)
-            pip.visibility = View.GONE
-            closeFrontOnly()
+            pip.animate().alpha(0f).setDuration(200).withEndAction {
+                pip.visibility = View.GONE
+                closePipOnly()
+            }.start()
             updateStatus()
         }
+    }
+
+    private fun switchCameras() {
+        if (isRecording) {
+            Toast.makeText(this, "Stop recording first", Toast.LENGTH_SHORT).show()
+            return
+        }
+        mainIsBack = !mainIsBack
+        closeAll()
+        Handler(mainLooper).postDelayed({
+            openMain()
+            if (dualOn) openPip()
+        }, 200)
     }
 
     private fun cycleFlash() {
@@ -165,14 +222,24 @@ class MainActivity : AppCompatActivity() {
             2 -> "Flash Auto"
             else -> "Flash Off"
         }
-        // Re-apply preview request with new flash if session exists
-        restartBackPreview()
+        restartMainPreview()
     }
 
     private fun toggleGrid() {
         gridOn = !gridOn
         gridOverlay.visibility = if (gridOn) View.VISIBLE else View.GONE
         btnGrid.setTextColor(if (gridOn) 0xFFFFFFFF.toInt() else 0xAAFFFFFF.toInt())
+    }
+
+    private fun showSettings() {
+        val items = arrayOf("Shutter sound: ON", "About Dual Cam")
+        AlertDialog.Builder(this)
+            .setTitle("Settings")
+            .setItems(items) { _, which ->
+                if (which == 0) Toast.makeText(this, "Sound toggle (coming)", Toast.LENGTH_SHORT).show()
+                else Toast.makeText(this, "Dual Cam v1 - Camera2 PIP", Toast.LENGTH_SHORT).show()
+            }
+            .show()
     }
 
     private fun onCaptureClick() {
@@ -195,13 +262,14 @@ class MainActivity : AppCompatActivity() {
     private fun updateStatus() {
         val mode = if (isPhotoMode) "PHOTO" else "VIDEO"
         val dual = if (dualOn) " · Dual" else ""
-        status.text = "$mode$dual"
+        val cam = if (mainIsBack) "Back" else "Front"
+        status.text = "$mode$dual · $cam"
     }
 
     override fun onRequestPermissionsResult(code: Int, p: Array<out String>, r: IntArray) {
         super.onRequestPermissionsResult(code, p, r)
         if (code == REQ && r.all { it == PackageManager.PERMISSION_GRANTED }) {
-            startBg(); setupBackOnly()
+            startBg(); setupMain()
         } else status.text = "Permission required"
     }
 
@@ -210,24 +278,24 @@ class MainActivity : AppCompatActivity() {
         bgHandler = Handler(bgThread!!.looper)
     }
 
-    private fun setupBackOnly() {
-        backPreview.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
+    private fun setupMain() {
+        mainPreview.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(s: SurfaceTexture, w: Int, h: Int) {
-                findIds(); openBack()
+                findIds(); openMain()
             }
             override fun onSurfaceTextureSizeChanged(s: SurfaceTexture, w: Int, h: Int) {}
             override fun onSurfaceTextureDestroyed(s: SurfaceTexture) = true
             override fun onSurfaceTextureUpdated(s: SurfaceTexture) {}
         }
-        frontPreview.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
+        pipPreview.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(s: SurfaceTexture, w: Int, h: Int) {
-                if (dualOn && backDev != null) openFront()
+                if (dualOn && mainDev != null) openPip()
             }
             override fun onSurfaceTextureSizeChanged(s: SurfaceTexture, w: Int, h: Int) {}
             override fun onSurfaceTextureDestroyed(s: SurfaceTexture) = true
             override fun onSurfaceTextureUpdated(s: SurfaceTexture) {}
         }
-        if (backPreview.isAvailable) { findIds(); openBack() }
+        if (mainPreview.isAvailable) { findIds(); openMain() }
     }
 
     private fun findIds() {
@@ -242,54 +310,57 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun openBack() {
-        val id = backId ?: return
+    private fun mainCamId(): String? = if (mainIsBack) backId else frontId
+    private fun pipCamId(): String? = if (mainIsBack) frontId else backId
+
+    private fun openMain() {
+        val id = mainCamId() ?: return
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) return
         try {
             if (!lock.tryAcquire(3, TimeUnit.SECONDS)) return
             mgr!!.openCamera(id, object : CameraDevice.StateCallback() {
                 override fun onOpened(c: CameraDevice) {
-                    lock.release(); backDev = c; startPreview(c, backPreview, false)
+                    lock.release(); mainDev = c; startPreview(c, mainPreview, false)
                     updateStatus()
                 }
-                override fun onDisconnected(c: CameraDevice) { lock.release(); c.close(); backDev = null }
+                override fun onDisconnected(c: CameraDevice) { lock.release(); c.close(); mainDev = null }
                 override fun onError(c: CameraDevice, e: Int) {
-                    lock.release(); c.close(); backDev = null
-                    status.text = "Back error $e"
+                    lock.release(); c.close(); mainDev = null
+                    status.text = "Main error $e"
                 }
             }, bgHandler)
         } catch (e: Exception) {
-            lock.release(); status.text = "Back fail"
+            lock.release(); status.text = "Main fail"
         }
     }
 
-    private fun openFront() {
-        val id = frontId ?: run {
-            status.text = "No front camera"
+    private fun openPip() {
+        val id = pipCamId() ?: run {
+            status.text = "No second camera"
             dualOn = false
             btnDual.text = "Dual OFF"
             pip.visibility = View.GONE
             return
         }
-        if (frontDev != null) return
+        if (pipDev != null) return
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) return
         try {
             if (!lock.tryAcquire(3, TimeUnit.SECONDS)) {
-                status.text = "Front timeout"
+                status.text = "PIP timeout"
                 return
             }
             mgr!!.openCamera(id, object : CameraDevice.StateCallback() {
                 override fun onOpened(c: CameraDevice) {
                     lock.release()
-                    frontDev = c
-                    startPreview(c, frontPreview, true)
+                    pipDev = c
+                    startPreview(c, pipPreview, true)
                     status.text = "Dual ON · ready"
                 }
                 override fun onDisconnected(c: CameraDevice) {
-                    lock.release(); c.close(); frontDev = null
+                    lock.release(); c.close(); pipDev = null
                 }
                 override fun onError(c: CameraDevice, e: Int) {
-                    lock.release(); c.close(); frontDev = null
+                    lock.release(); c.close(); pipDev = null
                     dualOn = false
                     runOnUiThread {
                         btnDual.text = "Dual OFF"
@@ -297,26 +368,26 @@ class MainActivity : AppCompatActivity() {
                         pip.visibility = View.GONE
                         status.text = "Dual failed (error $e)"
                     }
-                    Log.e(TAG, "Front error $e")
+                    Log.e(TAG, "PIP error $e")
                 }
             }, bgHandler)
         } catch (e: Exception) {
             lock.release()
-            status.text = "Front fail"
+            status.text = "PIP fail"
         }
     }
 
-    private fun closeFrontOnly() {
+    private fun closePipOnly() {
         try {
-            frontSess?.close()
-            frontDev?.close()
+            pipSess?.close()
+            pipDev?.close()
         } catch (_: Exception) {}
-        frontSess = null
-        frontDev = null
+        pipSess = null
+        pipDev = null
     }
 
-    private fun chooseSize(isFront: Boolean): Size {
-        val id = if (isFront) frontId else backId
+    private fun chooseSize(isPip: Boolean): Size {
+        val id = if (isPip) pipCamId() else mainCamId()
         return try {
             val map = mgr!!.getCameraCharacteristics(id!!)
                 .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
@@ -334,16 +405,16 @@ class MainActivity : AppCompatActivity() {
         else -> CaptureRequest.FLASH_MODE_OFF
     }
 
-    private fun startPreview(device: CameraDevice, view: TextureView, isFront: Boolean) {
+    private fun startPreview(device: CameraDevice, view: TextureView, isPip: Boolean) {
         val tex = view.surfaceTexture ?: return
-        val size = chooseSize(isFront)
+        val size = chooseSize(isPip)
         tex.setDefaultBufferSize(size.width, size.height)
         val surface = Surface(tex)
         try {
             val req = device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
                 addTarget(surface)
                 set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
-                if (!isFront) {
+                if (!isPip && mainIsBack) {
                     try {
                         set(CaptureRequest.FLASH_MODE, flashValue())
                     } catch (_: Exception) {}
@@ -351,15 +422,16 @@ class MainActivity : AppCompatActivity() {
             }
             device.createCaptureSession(listOf(surface), object : CameraCaptureSession.StateCallback() {
                 override fun onConfigured(s: CameraCaptureSession) {
-                    if (isFront) frontSess = s else backSess = s
+                    if (isPip) pipSess = s else mainSess = s
                     try {
                         s.setRepeatingRequest(req.build(), null, bgHandler)
+                        if (!isPip) applyZoom()
                     } catch (e: Exception) {
                         Log.e(TAG, "repeat", e)
                     }
                 }
                 override fun onConfigureFailed(s: CameraCaptureSession) {
-                    status.text = if (isFront) "Front config fail" else "Back config fail"
+                    status.text = if (isPip) "PIP config fail" else "Main config fail"
                 }
             }, bgHandler)
         } catch (e: Exception) {
@@ -367,21 +439,50 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun restartBackPreview() {
-        val dev = backDev ?: return
+    private fun applyZoom() {
+        val sess = mainSess ?: return
+        val dev = mainDev ?: return
         try {
-            backSess?.close()
-        } catch (_: Exception) {}
-        startPreview(dev, backPreview, false)
+            val id = mainCamId() ?: return
+            val chars = mgr!!.getCameraCharacteristics(id)
+            val maxZoom = chars.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM) ?: 1f
+            val active = chars.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE) ?: return
+            val centerX = active.width() / 2
+            val centerY = active.height() / 2
+            val cropW = (active.width() / (1f + zoomLevel * (maxZoom - 1f))).toInt()
+            val cropH = (active.height() / (1f + zoomLevel * (maxZoom - 1f))).toInt()
+            val left = centerX - cropW / 2
+            val top = centerY - cropH / 2
+            val crop = android.graphics.Rect(left, top, left + cropW, top + cropH)
+            val tex = mainPreview.surfaceTexture ?: return
+            val surface = Surface(tex)
+            val req = dev.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
+                addTarget(surface)
+                set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
+                set(CaptureRequest.SCALER_CROP_REGION, crop)
+                if (mainIsBack) {
+                    try { set(CaptureRequest.FLASH_MODE, flashValue()) } catch (_: Exception) {}
+                }
+            }
+            sess.setRepeatingRequest(req.build(), null, bgHandler)
+        } catch (e: Exception) {
+            Log.e(TAG, "zoom", e)
+        }
+    }
+
+    private fun restartMainPreview() {
+        val dev = mainDev ?: return
+        try { mainSess?.close() } catch (_: Exception) {}
+        startPreview(dev, mainPreview, false)
     }
 
     private fun closeAll() {
         try {
             lock.acquire()
-            backSess?.close(); frontSess?.close()
-            backDev?.close(); frontDev?.close()
-            backSess = null; frontSess = null
-            backDev = null; frontDev = null
+            mainSess?.close(); pipSess?.close()
+            mainDev?.close(); pipDev?.close()
+            mainSess = null; pipSess = null
+            mainDev = null; pipDev = null
         } catch (_: Exception) {
         } finally {
             lock.release()
@@ -392,10 +493,10 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         if (PERMS.all { ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED }) {
             startBg()
-            if (backPreview.isAvailable) {
-                findIds(); openBack()
-                if (dualOn) openFront()
-            } else setupBackOnly()
+            if (mainPreview.isAvailable) {
+                findIds(); openMain()
+                if (dualOn) openPip()
+            } else setupMain()
         }
     }
 

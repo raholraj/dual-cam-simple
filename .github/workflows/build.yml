@@ -11,16 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Reconstruct MainActivity
-        run: |
-          mkdir -p app/src/main/java/com/rahol/dualcam
-          if [ -f src_chunks/ma.gz.b64.part0 ]; then
-            cat src_chunks/ma.gz.b64.part0 src_chunks/ma.gz.b64.part1 | base64 -d | gunzip > app/src/main/java/com/rahol/dualcam/MainActivity.kt
-            echo "Reconstructed MainActivity:"
-            wc -l app/src/main/java/com/rahol/dualcam/MainActivity.kt
-            head -3 app/src/main/java/com/rahol/dualcam/MainActivity.kt
-          fi
-
       - uses: actions/setup-java@v4
         with:
           java-version: "17"
